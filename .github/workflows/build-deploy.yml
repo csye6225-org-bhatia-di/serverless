@@ -1,0 +1,32 @@
+name: Build and Deploy Serverless on lambda function
+
+env:
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_DEFAULT_OUTPUT: json
+  SERVERLESS_ARTIFACT_NAME: csye6225-serverless-${{ github.sha }}.zip
+  SERVERLESS_CODE_DEPLOY_BUCKET_NAME: serverless-code-deploy-bucket
+
+on:
+  push:
+    tags:
+      - '*'
+    branches: [ main ]
+
+jobs:    
+  build_and_deploy:
+    runs-on: ubuntu-latest   
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+      - uses: aws-actions/setup-sam@v1
+      - name: Configuring AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{secrets.AWS_ACCESS_ACTION_USER_KEY_ID}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_ACTION_USER_ACCESS_KEY}}
+          aws-region: ${{env.AWS_DEFAULT_REGION}}
+
+      - run: sam build --use-container
+
+
+      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name updating-lambda-${{ github.sha }} --s3-bucket ${{env.SERVERLESS_CODE_DEPLOY_BUCKET_NAME}} --capabilities CAPABILITY_IAM --region ${{env.AWS_DEFAULT_REGION}}
