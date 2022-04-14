@@ -20,6 +20,12 @@ jobs:
       - name: Zippping file
         run: |
           zip -r ${{env.SERVERLESS_ARTIFACT_NAME}} *
+      - name: Uploading the zip
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{env.SERVERLESS_ARTIFACT_NAME}}
+          path: ${{ github.workspace }}/${{env.WEB_SERVER_ARTIFACT_NAME}}
+        
       - uses: actions/setup-node@v2
       - name: Configuring AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
