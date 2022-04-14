@@ -21,7 +21,7 @@ exports.handler = async (event, context, callback) => {
       }
     };
 
-    console.log("Checking if record already present in DB!!");
+    console.log("### Beinning check on dynamo db ###");
     var existingUsers = null;
 
     
