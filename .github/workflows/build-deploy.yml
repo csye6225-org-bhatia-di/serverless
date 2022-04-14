@@ -1,47 +1,51 @@
-name: Build and Deploy Serverless on lambda function
+name: Lambda Function Deployment to Send SES emails
 
 env:
-  AWS_DEFAULT_REGION: us-east-1
-  AWS_DEFAULT_OUTPUT: json
-  SERVERLESS_ARTIFACT_NAME: csye6225-serverless-${{ github.sha }}.zip
-  SERVERLESS_CODE_DEPLOY_BUCKET_NAME: serverless-code-deploy-bucket
+  ARTIFACT_NAME: csye6225lambda.zip
+  AWS_REGION: us-east-1
 
 on:
   push:
-    tags:
-      - '*'
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
 
-jobs:    
-  build_and_deploy:
-    runs-on: ubuntu-latest   
+jobs:
+  Lambda:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
+
     steps:
-      - uses: actions/checkout@v1
-      - name: Zippping file
-        run: |
-          zip -r ${{env.WEB_SERVER_ARTIFACT_NAME}}
+      - uses: actions/checkout@v2
 
-      - name: Uploading the zip
-        uses: actions/upload-artifact@v1
+      - name: Install Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
         with:
-          name: ${{env.SERVERLESS_ARTIFACT_NAME}}
-          path: ${{ github.workspace }}/${{env.WEB_SERVER_ARTIFACT_NAME}}
-        
-      - uses: actions/setup-node@v2
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: |
+          sudo yum update -y && 
+          sudo yum install -y zip unzip
+          sudo npm install crypto
+          sudo npm install dotenv
+
+      - name: Build Deployment Artifact
+        run: |
+          zip -r ${{ env.ARTIFACT_NAME }} index.js .env
+
       - name: Configuring AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{secrets.AWS_ACCESS_ACTION_USER_KEY_ID}}
           aws-secret-access-key: ${{secrets.AWS_SECRET_ACTION_USER_ACCESS_KEY}}
-          aws-region: ${{env.AWS_DEFAULT_REGION}}
+          aws-region: ${{env.AWS_REGION}}
 
-      - name: Copy zip file to s3
+      - name: Copy Artifact to S3
         run: |
-          echo "Current Directory"
-          pwd
-          ls -la
-          echo "Moving function to s3"
-          aws s3 sync ./* s3://${{env.CODE_DEPLOY_BUCKET_NAME}}
-      
+          aws s3 cp ${{ env.ARTIFACT_NAME }} s3://serverless-code-deploy-bucket/${{ env.ARTIFACT_NAME }}
 
-      
+      - name: Lambda function to update code
+        run: |
+          aws lambda update-function-code --function-name emailHandler --region us-east-1 --zip-file fileb://${{ env.ARTIFACT_NAME }}
