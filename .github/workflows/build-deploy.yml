@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest   
     steps:
       - uses: actions/checkout@v1
+      - name: Zippping file
         run: |
           zip -r ${{env.SERVERLESS_ARTIFACT_NAME}} *
       - uses: actions/setup-node@v2
