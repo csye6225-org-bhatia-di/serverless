@@ -16,9 +16,10 @@ jobs:
   build_and_deploy:
     runs-on: ubuntu-latest   
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v1
+        run: |
+          zip -r ${{env.SERVERLESS_ARTIFACT_NAME}} *
       - uses: actions/setup-node@v2
-      - uses: aws-actions/setup-sam@v1
       - name: Configuring AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -26,7 +27,4 @@ jobs:
           aws-secret-access-key: ${{secrets.AWS_SECRET_ACTION_USER_ACCESS_KEY}}
           aws-region: ${{env.AWS_DEFAULT_REGION}}
 
-      - run: sam build --use-container
-
-
-      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name updating-lambda-${{ github.sha }} --s3-bucket ${{env.SERVERLESS_CODE_DEPLOY_BUCKET_NAME}} --capabilities CAPABILITY_IAM --region ${{env.AWS_DEFAULT_REGION}}
+      
