@@ -63,7 +63,7 @@ exports.handler = async (event, context, callback) => {
 
 const sendEmailUsingSES = async (domainName, username, token, first_name) => {
 
-    let link = `http://${domainName}/v1/verifyUserEmail?email=${username}&token=${token}`;
+    let link = `https://${domainName}/v1/verifyUserEmail?email=${username}&token=${token}`;
 
     let body = "Hi "+ first_name +",\n\n"+
     "Hi you have registered on our application, hence you need to verify your email address before using your account by clicking on below link:" +"\n\n\n"+
